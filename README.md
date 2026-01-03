@@ -4,18 +4,18 @@ A full-stack mini social media application where users can create posts with ima
 
 ## ✨ Features
 
-- 📸 **Image Upload**: Upload images (JPG, PNG) with posts
-- ✍️ **Captions**: Add captions to your posts
-- 🔥 **Post Feed**: View all posts in a beautiful, responsive feed
-- 💬 **Comments**: Add and view comments on any post
-- ⚡ **Real-time Updates**: Instant feedback and updates
-- 🎨 **Modern UI**: Glassmorphism design with smooth animations
-- 📱 **Responsive**: Works perfectly on mobile, tablet, and desktop
+- **Image Upload**: Upload images (JPG, PNG) with posts
+-  **Captions**: Add captions to your posts
+-  **Post Feed**: View all posts in a beautiful, responsive feed
+-  **Comments**: Add and view comments on any post
+-  **Real-time Updates**: Instant feedback and updates
+-  **Modern UI**: Glassmorphism design with smooth animations
+-  **Responsive**: Works perfectly on mobile, tablet, and desktop
 
 ## 🚀 Live Demo
 
-- **Frontend**: [Deployed on Vercel](#) *(URL to be added after deployment)*
-- **Backend API**: [Deployed on Render](#) *(URL to be added after deployment)*
+- **Frontend**: https://mini-social-media-opal.vercel.app/
+- **Backend API**: https://mini-social-media-1-4cj3.onrender.com  
 
 ## 🛠️ Technology Stack
 

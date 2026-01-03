@@ -5,6 +5,8 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { v4 as uuidv4 } from 'uuid';
 import fs from 'fs';
+import connectDB from './config/db.js';
+import Post from './models/Post.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -55,8 +57,8 @@ const upload = multer({
   fileFilter: fileFilter
 });
 
-// In-memory storage
-let posts = [];
+// Connect to MongoDB
+connectDB();
 
 // Helper function to get full image URL
 const getImageUrl = (filename, req) => {
@@ -67,7 +69,7 @@ const getImageUrl = (filename, req) => {
 
 // Health check
 app.get('/', (req, res) => {
-  res.json({ 
+  res.json({
     message: 'Mini Social Media API',
     version: '1.0.0',
     endpoints: {
@@ -79,7 +81,7 @@ app.get('/', (req, res) => {
 });
 
 // 1. Create Post
-app.post('/api/posts', upload.single('image'), (req, res) => {
+app.post('/api/posts', upload.single('image'), async (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({ error: 'Image is required' });
@@ -89,20 +91,19 @@ app.post('/api/posts', upload.single('image'), (req, res) => {
       return res.status(400).json({ error: 'Caption is required' });
     }
 
-    const newPost = {
-      id: uuidv4(),
+    // Create new post in MongoDB
+    const newPost = await Post.create({
       image: req.file.filename,
-      imageUrl: getImageUrl(req.file.filename, req),
-      caption: req.body.caption,
-      timestamp: new Date().toISOString(),
-      comments: []
-    };
+      caption: req.body.caption
+    });
 
-    posts.unshift(newPost); // Add to beginning for newest first
+    // Convert to JSON and add imageUrl
+    const postResponse = newPost.toJSON();
+    postResponse.imageUrl = getImageUrl(newPost.image, req);
 
     res.status(201).json({
       message: 'Post created successfully',
-      post: newPost
+      post: postResponse
     });
   } catch (error) {
     console.error('Error creating post:', error);
@@ -111,13 +112,17 @@ app.post('/api/posts', upload.single('image'), (req, res) => {
 });
 
 // 2. Get All Posts
-app.get('/api/posts', (req, res) => {
+app.get('/api/posts', async (req, res) => {
   try {
-    // Return posts with full image URLs
-    const postsWithUrls = posts.map(post => ({
-      ...post,
-      imageUrl: getImageUrl(post.image, req)
-    }));
+    // Fetch all posts from MongoDB, sorted by newest first
+    const posts = await Post.find().sort({ createdAt: -1 });
+
+    // Add imageUrl to each post
+    const postsWithUrls = posts.map(post => {
+      const postObj = post.toJSON();
+      postObj.imageUrl = getImageUrl(post.image, req);
+      return postObj;
+    });
 
     res.json({
       message: 'Posts retrieved successfully',
@@ -131,7 +136,7 @@ app.get('/api/posts', (req, res) => {
 });
 
 // 3. Add Comment to Post
-app.post('/api/posts/:id/comments', (req, res) => {
+app.post('/api/posts/:id/comments', async (req, res) => {
   try {
     const { id } = req.params;
     const { comment } = req.body;
@@ -140,29 +145,35 @@ app.post('/api/posts/:id/comments', (req, res) => {
       return res.status(400).json({ error: 'Comment text is required' });
     }
 
-    const post = posts.find(p => p.id === id);
+    // Find post by MongoDB _id and add comment
+    const post = await Post.findById(id);
 
     if (!post) {
       return res.status(404).json({ error: 'Post not found' });
     }
 
-    const newComment = {
-      id: uuidv4(),
+    // Add comment to the post
+    post.comments.push({
       text: comment,
-      timestamp: new Date().toISOString()
-    };
+      timestamp: new Date()
+    });
 
-    post.comments.push(newComment);
+    // Save the updated post
+    await post.save();
+
+    // Convert to JSON and add imageUrl
+    const postResponse = post.toJSON();
+    postResponse.imageUrl = getImageUrl(post.image, req);
 
     res.status(201).json({
       message: 'Comment added successfully',
-      post: {
-        ...post,
-        imageUrl: getImageUrl(post.image, req)
-      }
+      post: postResponse
     });
   } catch (error) {
     console.error('Error adding comment:', error);
+    if (error.name === 'CastError') {
+      return res.status(400).json({ error: 'Invalid post ID format' });
+    }
     res.status(500).json({ error: 'Failed to add comment' });
   }
 });
@@ -175,11 +186,11 @@ app.use((err, req, res, next) => {
     }
     return res.status(400).json({ error: err.message });
   }
-  
+
   if (err) {
     return res.status(400).json({ error: err.message });
   }
-  
+
   next();
 });
 

@@ -30,21 +30,25 @@ A full-stack mini social media application where users can create posts with ima
 - **Express** - Web framework
 - **Multer** - File upload middleware
 - **CORS** - Cross-Origin Resource Sharing
-- **UUID** - Unique ID generation
+- **Mongoose** - MongoDB ODM (Object Data Modeling)
 
-### Storage
-- **In-Memory** - Simple array-based storage (data resets on server restart)
+### Database
+- **MongoDB Atlas** - Cloud-hosted MongoDB database with free tier
 
 ## 📁 Project Structure
 
 ```
 Assignment/
 ├── backend/
-│   ├── server.js          # Express server with API endpoints
-│   ├── package.json       # Backend dependencies
-│   ├── .env.example       # Environment variables template
-│   ├── .gitignore        # Git ignore rules
-│   └── uploads/          # Uploaded images directory (auto-created)
+│   ├── config/
+│   │   └── db.js             # MongoDB connection configuration
+│   ├── models/
+│   │   └── Post.js           # Mongoose Post model with comments
+│   ├── server.js             # Express server with API endpoints
+│   ├── package.json          # Backend dependencies
+│   ├── .env.example          # Environment variables template
+│   ├── .gitignore           # Git ignore rules
+│   └── uploads/             # Uploaded images directory (auto-created)
 │
 ├── frontend/
 │   ├── src/
@@ -60,7 +64,9 @@ Assignment/
 │   ├── .env.example            # Environment variables template
 │   └── .gitignore             # Git ignore rules
 │
-└── README.md                   # This file
+├── README.md                         # This file
+├── DEPLOYMENT_GUIDE.md              # Complete deployment instructions
+└── DEPLOYMENT_QUICK_START.md        # Quick deployment reference
 ```
 
 ## 📋 API Endpoints
@@ -139,17 +145,63 @@ Response: 201 Created
    npm install
    ```
 
-3. **Create environment file** (optional)
+3. **Set up MongoDB Atlas** (Free Cloud Database)
+   
+   a. Go to [MongoDB Atlas](https://www.mongodb.com/cloud/atlas) and create a free account
+   
+   b. Create a new cluster:
+      - Click "Build a Database"
+      - Select "FREE" tier (M0 Sandbox)
+      - Choose your preferred cloud provider and region
+      - Click "Create Cluster"
+   
+   c. Create database user:
+      - Go to "Database Access" in left sidebar
+      - Click "Add New Database User"
+      - Choose "Password" authentication
+      - Set username and password (save these!)
+      - Set user privileges to "Atlas Admin"
+      - Click "Add User"
+   
+   d. Whitelist your IP:
+      - Go to "Network Access" in left sidebar
+      - Click "Add IP Address"
+      - Click "Allow Access from Anywhere" (for development)
+      - Click "Confirm"
+   
+   e. Get connection string:
+      - Go to "Database" in left sidebar
+      - Click "Connect" on your cluster
+      - Select "Connect your application"
+      - Copy the connection string
+      - It looks like: `mongodb+srv://username:password@cluster.mongodb.net/?retryWrites=true&w=majority`
+
+4. **Create environment file**
    ```bash
    cp .env.example .env
    ```
+   
+   Edit `.env` and replace `MONGODB_URI` with your MongoDB Atlas connection string:
+   - Replace `<username>` with your database username
+   - Replace `<password>` with your database password
+   - Add database name (e.g., `mini-social-media`) after `.net/`
+   
+   Example:
+   ```
+   MONGODB_URI=mongodb+srv://myuser:mypassword@cluster0.abc123.mongodb.net/mini-social-media?retryWrites=true&w=majority
+   ```
 
-4. **Start the server**
+5. **Start the server**
    ```bash
    npm start
    ```
    
-   Server will run on `http://localhost:5000`
+   You should see:
+   ```
+   ✅ MongoDB Connected: cluster0-shard-00-00.abc123.mongodb.net
+   📊 Database Name: mini-social-media
+   🚀 Server is running on port 5000
+   ```
 
 ### Frontend Setup
 
@@ -184,32 +236,26 @@ Response: 201 Created
 
 ## 🌐 Deployment Guide
 
-### Backend Deployment (Render)
+**Detailed step-by-step deployment instructions available in:**
+- 📚 **[DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md)** - Complete guide with screenshots
+- ⚡ **[DEPLOYMENT_QUICK_START.md](DEPLOYMENT_QUICK_START.md)** - Quick reference
 
-1. **Create account** on [Render.com](https://render.com)
-2. **New Web Service** → Connect your Git repository
-3. **Configure:**
-   - **Build Command**: `npm install`
-   - **Start Command**: `npm start`
-   - **Environment**: Node
-4. **Deploy** and copy the service URL
+### Quick Summary
 
-### Frontend Deployment (Vercel)
+#### Backend Deployment (Render)
+1. Push code to GitHub
+2. Connect GitHub repo to Render
+3. Set Root Directory: `backend`
+4. Add environment variables (`MONGODB_URI`, `PORT`)
+5. Deploy
 
-1. **Create account** on [Vercel.com](https://vercel.com)
-2. **Import Project** → Select your repository
-3. **Configure:**
-   - **Root Directory**: `frontend`
-   - **Framework Preset**: Vite
-   - **Environment Variables**: 
-     - `VITE_API_URL` = Your Render backend URL
-4. **Deploy**
+#### Frontend Deployment (Vercel)
+1. Connect GitHub repo to Vercel
+2. Set Root Directory: `frontend`
+3. Add environment variable (`VITE_API_URL`)
+4. Deploy
 
-### Post-Deployment
-
-1. Update frontend `.env` with production backend URL
-2. Test all features on live URLs
-3. Update this README with live URLs
+**See deployment guides for detailed instructions!**
 
 ## 🎨 Design Features
 
@@ -223,20 +269,19 @@ Response: 201 Created
 
 ## 🔒 Limitations
 
-- **In-Memory Storage**: All data is lost when the backend server restarts
 - **No Authentication**: Anyone can create posts and comments
-- **File Storage**: Images stored locally on server filesystem
+- **Basic File Storage**: Images stored locally on server filesystem
 - **No Pagination**: All posts loaded at once
 
 ## 🚀 Future Enhancements
 
-- Database integration (MongoDB/PostgreSQL)
 - User authentication and profiles
 - Image optimization and cloud storage (Cloudinary/S3)
 - Pagination and infinite scroll
 - Like/reaction system
 - Post deletion and editing
 - Image filters and cropping
+- Real-time updates with WebSockets
 
 ## 📄 License
 
